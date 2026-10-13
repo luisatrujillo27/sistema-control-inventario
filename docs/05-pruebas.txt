@@ -1,0 +1,35 @@
+Salida de: python -m unittest discover -v
+Fecha: 2026-10-13
+
+test_cada_producto_tiene_estado_calculado (test_app.TestInicio.test_cada_producto_tiene_estado_calculado) ... ok
+test_la_pagina_responde_y_lista_los_productos (test_app.TestInicio.test_la_pagina_responde_y_lista_los_productos) ... ok
+test_la_alerta_no_se_repite_mientras_siga_bajo (test_app.TestMovimientos.test_la_alerta_no_se_repite_mientras_siga_bajo) ... ok
+test_la_entrada_aumenta_las_existencias (test_app.TestMovimientos.test_la_entrada_aumenta_las_existencias) ... ok
+test_la_salida_descuenta_las_existencias (test_app.TestMovimientos.test_la_salida_descuenta_las_existencias) ... ok
+test_la_salida_que_cruza_el_minimo_genera_alerta (test_app.TestMovimientos.test_la_salida_que_cruza_el_minimo_genera_alerta) ... ok
+test_reponer_y_volver_a_bajar_alerta_de_nuevo (test_app.TestMovimientos.test_reponer_y_volver_a_bajar_alerta_de_nuevo) ... ok
+test_reiniciar_no_deja_alertas_pendientes (test_app.TestReinicio.test_reiniciar_no_deja_alertas_pendientes) ... ok
+test_reiniciar_restaura_el_inventario (test_app.TestReinicio.test_reiniciar_restaura_el_inventario) ... ok
+test_no_permite_sacar_mas_de_lo_disponible (test_app.TestValidaciones.test_no_permite_sacar_mas_de_lo_disponible) ... ok
+test_rechaza_cantidad_cero_o_negativa (test_app.TestValidaciones.test_rechaza_cantidad_cero_o_negativa) ... ok
+test_rechaza_cantidad_no_numerica (test_app.TestValidaciones.test_rechaza_cantidad_no_numerica) ... ok
+test_rechaza_producto_inexistente (test_app.TestValidaciones.test_rechaza_producto_inexistente) ... ok
+test_rechaza_tipo_de_movimiento_invalido (test_app.TestValidaciones.test_rechaza_tipo_de_movimiento_invalido) ... ok
+test_la_alerta_no_se_repite_si_sigue_critico (test_observer.TestAlertas.test_la_alerta_no_se_repite_si_sigue_critico) ... ok
+test_recoger_alertas_vacia_la_lista (test_observer.TestAlertas.test_recoger_alertas_vacia_la_lista) ... ok
+test_se_genera_alerta_al_caer_bajo_el_minimo (test_observer.TestAlertas.test_se_genera_alerta_al_caer_bajo_el_minimo) ... ok
+test_vuelve_a_alertar_despues_de_reponer_y_bajar_otra_vez (test_observer.TestAlertas.test_vuelve_a_alertar_despues_de_reponer_y_bajar_otra_vez) ... ok
+test_cantidad_holgada_es_optimo (test_observer.TestClasificacionDeStock.test_cantidad_holgada_es_optimo) ... ok
+test_cantidad_igual_al_minimo_es_critico (test_observer.TestClasificacionDeStock.test_cantidad_igual_al_minimo_es_critico)
+El enunciado pide detectar existencia *igual o inferior* al mínimo. ... ok
+test_cantidad_inferior_al_minimo_es_critico (test_observer.TestClasificacionDeStock.test_cantidad_inferior_al_minimo_es_critico) ... ok
+test_cantidad_justo_encima_del_minimo_es_regular (test_observer.TestClasificacionDeStock.test_cantidad_justo_encima_del_minimo_es_regular) ... ok
+test_detach_deja_de_notificar (test_observer.TestSubject.test_detach_deja_de_notificar) ... ok
+test_los_observadores_cumplen_el_contrato (test_observer.TestSubject.test_los_observadores_cumplen_el_contrato) ... ok
+test_no_registra_dos_veces_el_mismo_observador (test_observer.TestSubject.test_no_registra_dos_veces_el_mismo_observador) ... ok
+test_notifica_a_varios_observadores (test_observer.TestSubject.test_notifica_a_varios_observadores) ... ok
+
+----------------------------------------------------------------------
+Ran 26 tests in 0.218s
+
+OK
