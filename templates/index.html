@@ -41,6 +41,7 @@
 
         .ok {
             color: #15803d;
+            font-weight: bold;
         }
 
         input, button {
@@ -54,6 +55,10 @@
             border: 0;
             border-radius: 5px;
             cursor: pointer;
+        }
+
+        button:hover {
+            background: #1e40af;
         }
     </style>
 </head>
@@ -81,16 +86,21 @@
                 <td>{{ producto.minimo }}</td>
 
                 <td>
-                    {% if producto.cantidad < producto.minimo %}
-                        <span class="alerta">Stock bajo</span>
+                    {% if producto.alerta %}
+                        <span class="alerta">
+                            {{ producto.estado }}
+                        </span>
                     {% else %}
-                        <span class="ok">Stock suficiente</span>
+                        <span class="ok">
+                            {{ producto.estado }}
+                        </span>
                     {% endif %}
                 </td>
 
                 <td>
                     <form action="{{ url_for('registrar_salida') }}"
                           method="post">
+
                         <input type="hidden"
                                name="producto_id"
                                value="{{ producto.id }}">
@@ -101,7 +111,9 @@
                                max="{{ producto.cantidad }}"
                                required>
 
-                        <button type="submit">Registrar</button>
+                        <button type="submit">
+                            Registrar
+                        </button>
                     </form>
                 </td>
             </tr>

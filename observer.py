@@ -20,6 +20,7 @@ class Subject:
             observer.update(producto)
 
 
+
 class StockObserver:
     """Observador que detecta productos con stock bajo."""
 
@@ -34,3 +35,4 @@ class StockObserver:
         else:
             producto["estado"] = "Stock suficiente"
             producto["alerta"] = False
+
