@@ -1,0 +1,124 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Control de inventario</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f1f5f9;
+            margin: 40px;
+            color: #1e293b;
+        }
+
+        h1 {
+            color: #1d4ed8;
+        }
+
+        table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            border-bottom: 1px solid #ddd;
+            text-align: left;
+        }
+
+        th {
+            background: #dbeafe;
+        }
+
+        .alerta {
+            color: #dc2626;
+            font-weight: bold;
+        }
+
+        .ok {
+            color: #15803d;
+            font-weight: bold;
+        }
+
+        input, button {
+            padding: 8px;
+            margin: 4px;
+        }
+
+        button {
+            background: #1d4ed8;
+            color: white;
+            border: 0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #1e40af;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Sistema de control de inventario</h1>
+    <p>Supermercado - Existencias de productos</p>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Producto</th>
+                <th>Existencias</th>
+                <th>Stock mínimo</th>
+                <th>Estado</th>
+                <th>Registrar salida</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for producto in productos %}
+            <tr>
+                <td>{{ producto.nombre }}</td>
+                <td>{{ producto.cantidad }}</td>
+                <td>{{ producto.minimo }}</td>
+
+                <td>
+                    {% if producto.alerta %}
+                        <span class="alerta">
+                            {{ producto.estado }}
+                        </span>
+                    {% else %}
+                        <span class="ok">
+                            {{ producto.estado }}
+                        </span>
+                    {% endif %}
+                </td>
+
+                <td>
+                    <form action="{{ url_for('registrar_salida') }}"
+                          method="post">
+
+                        <input type="hidden"
+                               name="producto_id"
+                               value="{{ producto.id }}">
+
+                        <input type="number"
+                               name="cantidad"
+                               min="1"
+                               max="{{ producto.cantidad }}"
+                               required>
+
+                        <button type="submit">
+                            Registrar
+                        </button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</body>
+</html>
