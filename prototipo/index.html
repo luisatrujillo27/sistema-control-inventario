@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Prototipo navegable del sistema de control de inventario para un supermercado.">
+  <title>InventarioPro | Control de inventario</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="css/estilos.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <a class="brand" href="#" data-page="dashboard" aria-label="Ir al inicio">
+        <span class="brand-mark"><i class="bi bi-box-seam"></i></span>
+        <span><strong>Inventario<span class="brand-accent">Pro</span></strong><small>CONTROL DE EXISTENCIAS</small></span>
+      </a>
+
+      <div class="menu-label">MENÚ PRINCIPAL</div>
+      <nav class="side-nav" aria-label="Navegación principal">
+        <button class="nav-link active" data-page="dashboard"><i class="bi bi-grid-1x2"></i><span>Dashboard</span></button>
+        <button class="nav-link" data-page="inventario"><i class="bi bi-boxes"></i><span>Inventario</span><span class="nav-count">18</span></button>
+        <button class="nav-link" data-page="movimientos"><i class="bi bi-arrow-left-right"></i><span>Movimientos</span></button>
+        <button class="nav-link" data-page="alertas"><i class="bi bi-bell"></i><span>Alertas</span><span class="nav-dot"></span></button>
+        <button class="nav-link" data-page="reportes"><i class="bi bi-bar-chart-line"></i><span>Reportes</span></button>
+      </nav>
+
+      <div class="menu-label secondary-label">SISTEMA</div>
+      <nav class="side-nav">
+        <button class="nav-link" data-page="acerca"><i class="bi bi-info-circle"></i><span>Acerca del sistema</span></button>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <div class="help-card">
+          <div class="help-icon"><i class="bi bi-lightbulb"></i></div>
+          <strong>¿Necesitas ayuda?</strong>
+          <p>Consulta las secciones del sistema para conocer sus funciones.</p>
+          <button class="help-button" data-page="acerca">Conocer más <i class="bi bi-arrow-right"></i></button>
+        </div>
+        <div class="user-profile">
+          <div class="avatar">AD</div>
+          <div class="user-info"><strong>Administrador</strong><small>Gestión de inventario</small></div>
+          <i class="bi bi-three-dots"></i>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="icon-button mobile-menu" id="mobileMenu" aria-label="Abrir menú"><i class="bi bi-list"></i></button>
+          <div class="breadcrumb"><span>Supermercado</span><i class="bi bi-chevron-right"></i><strong id="breadcrumbCurrent">Dashboard</strong></div>
+        </div>
+        <div class="topbar-actions">
+          <span class="prototype-pill"><span></span> Prototipo de navegación</span>
+          <button class="icon-button notification-button" data-page="alertas" aria-label="Ver alertas"><i class="bi bi-bell"></i><span></span></button>
+          <div class="topbar-date"><i class="bi bi-calendar3"></i><span id="todayDate">Hoy</span></div>
+        </div>
+      </header>
+
+      <div class="content-wrap">
+        <!-- DASHBOARD -->
+        <section class="page-section active" id="page-dashboard">
+          <div class="page-heading">
+            <div><p class="eyebrow">VISTA GENERAL</p><h1>Dashboard</h1><p class="page-subtitle">Bienvenida al resumen de tu inventario.</p></div>
+            <button class="btn btn-primary" data-page="movimientos"><i class="bi bi-plus-lg"></i> Nuevo movimiento</button>
+          </div>
+
+          <div class="stats-grid">
+            <article class="stat-card clickable-stat" data-stock-filter="todos" role="button" tabindex="0" aria-label="Ver todos los productos"><div class="stat-top"><span>Total de productos</span><span class="stat-icon blue"><i class="bi bi-box-seam"></i></span></div><div class="stat-value">18</div><div class="stat-foot"><span class="trend positive"><i class="bi bi-arrow-up-right"></i> Inventario registrado</span></div></article>
+            <article class="stat-card clickable-stat" data-stock-filter="optimo" role="button" tabindex="0" aria-label="Ver productos con stock óptimo"><div class="stat-top"><span>Stock óptimo</span><span class="stat-icon green"><i class="bi bi-check-circle"></i></span></div><div class="stat-value">11</div><div class="stat-foot"><span class="status-text green-text">Disponibilidad adecuada</span></div></article>
+            <article class="stat-card clickable-stat" data-stock-filter="regular" role="button" tabindex="0" aria-label="Ver productos con stock regular"><div class="stat-top"><span>Stock regular</span><span class="stat-icon amber"><i class="bi bi-exclamation-circle"></i></span></div><div class="stat-value">3</div><div class="stat-foot"><span class="status-text amber-text">Requiere seguimiento</span></div></article>
+            <article class="stat-card clickable-stat" data-stock-filter="critico" role="button" tabindex="0" aria-label="Ver productos con stock crítico"><div class="stat-top"><span>Stock crítico</span><span class="stat-icon red"><i class="bi bi-exclamation-triangle"></i></span></div><div class="stat-value">4</div><div class="stat-foot"><span class="status-text red-text">Necesita reposición</span></div></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="panel chart-panel">
+              <div class="panel-heading"><div><h2>Estado del inventario</h2><p>Distribución de productos por nivel de existencias</p></div><button class="text-button" data-page="reportes">Ver reporte <i class="bi bi-arrow-up-right"></i></button></div>
+              <div class="inventory-chart">
+                <div class="donut-wrap"><div class="donut"><div class="donut-center"><strong>18</strong><span>Productos</span></div></div></div>
+                <div class="chart-legend">
+                  <div><span class="legend-dot green-bg"></span><span>Óptimo</span><strong>11 <small>(61%)</small></strong></div>
+                  <div><span class="legend-dot amber-bg"></span><span>Regular</span><strong>3 <small>(17%)</small></strong></div>
+                  <div><span class="legend-dot red-bg"></span><span>Crítico</span><strong>4 <small>(22%)</small></strong></div>
+                </div>
+              </div>
+            </article>
+            <article class="panel attention-panel">
+              <div class="panel-heading"><div><h2>Requieren atención</h2><p>Productos con stock crítico</p></div><span class="mini-counter">4 alertas</span></div>
+              <div class="attention-list">
+                <div class="attention-item"><span class="product-avatar red-soft"><i class="bi bi-basket"></i></span><div><strong>Plátano maduro</strong><small>7 unidades · Mínimo 15</small></div><span class="badge badge-critical">Crítico</span></div>
+                <div class="attention-item"><span class="product-avatar red-soft"><i class="bi bi-bag"></i></span><div><strong>Salchichón Zenú</strong><small>9 unidades · Mínimo 10</small></div><span class="badge badge-critical">Crítico</span></div>
+                <div class="attention-item"><span class="product-avatar red-soft"><i class="bi bi-basket2"></i></span><div><strong>Arepa de maíz blanco</strong><small>12 unidades · Mínimo 20</small></div><span class="badge badge-critical">Crítico</span></div>
+              </div>
+              <button class="panel-footer-link" data-page="alertas">Ver todas las alertas <i class="bi bi-arrow-right"></i></button>
+            </article>
+          </div>
+
+          <article class="panel recent-panel">
+            <div class="panel-heading"><div><h2>Productos destacados</h2><p>Consulta rápida de existencias</p></div><button class="text-button" data-page="inventario">Ver inventario completo <i class="bi bi-arrow-up-right"></i></button></div>
+            <div class="table-scroll"><table><thead><tr><th>PRODUCTO</th><th>CÓDIGO</th><th>EXISTENCIAS</th><th>STOCK MÍNIMO</th><th>ESTADO</th></tr></thead><tbody>
+              <tr><td><span class="table-product"><span class="product-avatar blue-soft"><i class="bi bi-basket"></i></span>Arroz Diana (1 kg)</span></td><td>001</td><td>150 unidades</td><td>50</td><td><span class="badge badge-optimal">Óptimo</span></td></tr>
+              <tr><td><span class="table-product"><span class="product-avatar amber-soft"><i class="bi bi-bag"></i></span>Azúcar Manuelita (1 kg)</span></td><td>011</td><td>22 unidades</td><td>25</td><td><span class="badge badge-critical">Crítico</span></td></tr>
+              <tr><td><span class="table-product"><span class="product-avatar green-soft"><i class="bi bi-cup"></i></span>Leche Colanta (1 L)</span></td><td>008</td><td>90 unidades</td><td>40</td><td><span class="badge badge-optimal">Óptimo</span></td></tr>
+              <tr id="noProductsRow" hidden><td colspan="6" class="empty-state">No se encontraron productos con esos criterios. Cambia la búsqueda o el filtro.</td></tr>
+            </tbody></table></div>
+          </article>
+        </section>
+
+        <!-- INVENTARIO -->
+        <section class="page-section" id="page-inventario">
+          <div class="page-heading"><div><p class="eyebrow">GESTIÓN DE EXISTENCIAS</p><h1>Inventario</h1><p class="page-subtitle">Consulta los productos registrados y sus niveles de stock.</p></div><button class="btn btn-primary" data-page="movimientos"><i class="bi bi-plus-lg"></i> Registrar movimiento</button></div>
+          <div class="toolbar panel"><div class="search-box"><i class="bi bi-search"></i><input id="productSearch" type="search" placeholder="Buscar producto o código..."></div><div class="filter-select"><i class="bi bi-funnel"></i><select id="statusFilter"><option value="todos">Todos los estados</option><option value="optimo">Óptimo</option><option value="regular">Regular</option><option value="critico">Crítico</option></select></div></div>
+          <article class="panel">
+            <div class="panel-heading"><div><h2>Listado de productos</h2><p>18 productos registrados en el sistema</p></div><span class="table-note">Datos de demostración</span></div>
+            <div class="table-scroll"><table id="inventoryTable"><thead><tr><th>PRODUCTO</th><th>CÓDIGO</th><th>EXISTENCIAS</th><th>STOCK MÍNIMO</th><th>ESTADO</th><th>ACCIÓN</th></tr></thead><tbody>
+              <tr data-name="arroz diana" data-code="001" data-status="optimo"><td><span class="table-product"><span class="product-avatar blue-soft"><i class="bi bi-basket"></i></span>Arroz Diana (1 kg)</span></td><td>001</td><td>150</td><td>50</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Arroz Diana">Ver detalle</button></td></tr>
+              <tr data-name="frijol cargamanto" data-code="002" data-status="regular"><td><span class="table-product"><span class="product-avatar amber-soft"><i class="bi bi-bag"></i></span>Fríjol cargamanto (500 g)</span></td><td>002</td><td>40</td><td>25</td><td><span class="badge badge-regular">Regular</span></td><td><button class="row-action" data-demo="Detalle del producto Fríjol cargamanto">Ver detalle</button></td></tr>
+              <tr data-name="panela redonda" data-code="003" data-status="regular"><td><span class="table-product"><span class="product-avatar amber-soft"><i class="bi bi-box"></i></span>Panela redonda (500 g)</span></td><td>003</td><td>28</td><td>20</td><td><span class="badge badge-regular">Regular</span></td><td><button class="row-action" data-demo="Detalle del producto Panela redonda">Ver detalle</button></td></tr>
+              <tr data-name="maiz trillado" data-code="004" data-status="regular"><td><span class="table-product"><span class="product-avatar amber-soft"><i class="bi bi-basket2"></i></span>Maíz trillado (500 g)</span></td><td>004</td><td>18</td><td>15</td><td><span class="badge badge-regular">Regular</span></td><td><button class="row-action" data-demo="Detalle del producto Maíz trillado">Ver detalle</button></td></tr>
+              <tr data-name="arepa maiz blanco" data-code="005" data-status="critico"><td><span class="table-product"><span class="product-avatar red-soft"><i class="bi bi-circle"></i></span>Arepa de maíz blanco (x5)</span></td><td>005</td><td>12</td><td>20</td><td><span class="badge badge-critical">Crítico</span></td><td><button class="row-action" data-demo="Detalle del producto Arepa de maíz blanco">Ver detalle</button></td></tr>
+              <tr data-name="chocolate corona" data-code="006" data-status="optimo"><td><span class="table-product"><span class="product-avatar blue-soft"><i class="bi bi-cup-hot"></i></span>Chocolate Corona (500 g)</span></td><td>006</td><td>60</td><td>20</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Chocolate Corona">Ver detalle</button></td></tr>
+              <tr data-name="cafe sello rojo" data-code="007" data-status="optimo"><td><span class="table-product"><span class="product-avatar blue-soft"><i class="bi bi-cup"></i></span>Café Sello Rojo (250 g)</span></td><td>007</td><td>35</td><td>20</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Café Sello Rojo">Ver detalle</button></td></tr>
+              <tr data-name="leche colanta" data-code="008" data-status="optimo"><td><span class="table-product"><span class="product-avatar green-soft"><i class="bi bi-cup-straw"></i></span>Leche Colanta (1 L)</span></td><td>008</td><td>90</td><td>40</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Leche Colanta">Ver detalle</button></td></tr>
+              <tr data-name="huevos aa" data-code="009" data-status="optimo"><td><span class="table-product"><span class="product-avatar green-soft"><i class="bi bi-egg"></i></span>Huevos AA (cubeta x30)</span></td><td>009</td><td>14</td><td>10</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Huevos AA">Ver detalle</button></td></tr>
+              <tr data-name="aceite girasol" data-code="010" data-status="optimo"><td><span class="table-product"><span class="product-avatar blue-soft"><i class="bi bi-droplet"></i></span>Aceite Girasol (1 L)</span></td><td>010</td><td>85</td><td>30</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Aceite Girasol">Ver detalle</button></td></tr>
+              <tr data-name="azucar manuelita" data-code="011" data-status="critico"><td><span class="table-product"><span class="product-avatar red-soft"><i class="bi bi-box-seam"></i></span>Azúcar Manuelita (1 kg)</span></td><td>011</td><td>22</td><td>25</td><td><span class="badge badge-critical">Crítico</span></td><td><button class="row-action" data-demo="Detalle del producto Azúcar Manuelita">Ver detalle</button></td></tr>
+              <tr data-name="pan tajado" data-code="012" data-status="optimo"><td><span class="table-product"><span class="product-avatar green-soft"><i class="bi bi-basket"></i></span>Pan tajado (500 g)</span></td><td>012</td><td>16</td><td>12</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Pan tajado">Ver detalle</button></td></tr>
+              <tr data-name="salchichon zenu" data-code="013" data-status="critico"><td><span class="table-product"><span class="product-avatar red-soft"><i class="bi bi-box"></i></span>Salchichón Zenú (500 g)</span></td><td>013</td><td>9</td><td>10</td><td><span class="badge badge-critical">Crítico</span></td><td><button class="row-action" data-demo="Detalle del producto Salchichón Zenú">Ver detalle</button></td></tr>
+              <tr data-name="atun van camps" data-code="014" data-status="optimo"><td><span class="table-product"><span class="product-avatar blue-soft"><i class="bi bi-box"></i></span>Atún Van Camp's (160 g)</span></td><td>014</td><td>70</td><td>30</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Atún">Ver detalle</button></td></tr>
+              <tr data-name="gaseosa postobon" data-code="015" data-status="optimo"><td><span class="table-product"><span class="product-avatar blue-soft"><i class="bi bi-cup-straw"></i></span>Gaseosa Postobón (1.5 L)</span></td><td>015</td><td>48</td><td>24</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Gaseosa Postobón">Ver detalle</button></td></tr>
+              <tr data-name="agua cristal" data-code="016" data-status="optimo"><td><span class="table-product"><span class="product-avatar blue-soft"><i class="bi bi-droplet-half"></i></span>Agua Cristal (600 ml)</span></td><td>016</td><td>120</td><td>50</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Agua Cristal">Ver detalle</button></td></tr>
+              <tr data-name="platano maduro" data-code="017" data-status="critico"><td><span class="table-product"><span class="product-avatar red-soft"><i class="bi bi-basket"></i></span>Plátano maduro (kg)</span></td><td>017</td><td>7</td><td>15</td><td><span class="badge badge-critical">Crítico</span></td><td><button class="row-action" data-demo="Detalle del producto Plátano maduro">Ver detalle</button></td></tr>
+              <tr data-name="papa criolla" data-code="018" data-status="optimo"><td><span class="table-product"><span class="product-avatar green-soft"><i class="bi bi-basket2"></i></span>Papa criolla (kg)</span></td><td>018</td><td>55</td><td>20</td><td><span class="badge badge-optimal">Óptimo</span></td><td><button class="row-action" data-demo="Detalle del producto Papa criolla">Ver detalle</button></td></tr>
+            </tbody></table></div>
+          </article>
+        </section>
+
+        <!-- MOVIMIENTOS -->
+        <section class="page-section" id="page-movimientos">
+          <div class="page-heading"><div><p class="eyebrow">OPERACIONES</p><h1>Movimientos</h1><p class="page-subtitle">Vista de diseño para registrar entradas y salidas de productos.</p></div></div>
+          <div class="movement-layout">
+            <article class="panel movement-form-panel"><div class="panel-heading"><div><h2>Registrar movimiento</h2><p>Completa los campos de ejemplo para visualizar el formulario.</p></div><span class="stat-icon blue"><i class="bi bi-arrow-left-right"></i></span></div>
+              <form id="movementForm">
+                <label for="movementProduct">Producto</label><select id="movementProduct"><option>Arroz Diana (1 kg)</option><option>Fríjol cargamanto (500 g)</option><option>Arepa de maíz blanco (x5)</option><option>Leche Colanta (1 L)</option><option>Plátano maduro (kg)</option></select>
+                <label>Tipo de movimiento</label><div class="movement-types"><label class="movement-choice selected"><input type="radio" name="movementType" value="Entrada" checked><i class="bi bi-box-arrow-in-down"></i><span><strong>Entrada</strong><small>Ingreso de productos</small></span></label><label class="movement-choice"><input type="radio" name="movementType" value="Salida"><i class="bi bi-box-arrow-up"></i><span><strong>Salida</strong><small>Retiro de productos</small></span></label></div>
+                <label for="movementQuantity">Cantidad</label><input id="movementQuantity" type="number" min="1" placeholder="Ej. 25">
+                <label for="movementNote">Observaciones <span class="optional">(opcional)</span></label><textarea id="movementNote" rows="3" placeholder="Escribe una observación..."></textarea>
+                <button class="btn btn-primary full-width" type="submit"><i class="bi bi-check2-circle"></i> Vista previa del movimiento</button>
+                <p class="prototype-note"><i class="bi bi-info-circle"></i> Prototipo académico: el formulario no modifica el inventario real.</p>
+              </form>
+            </article>
+            <article class="panel movement-info"><div class="info-illustration"><i class="bi bi-arrow-left-right"></i></div><h2>Control de movimientos</h2><p>Esta pantalla representa el proceso de registro de entradas y salidas de productos del supermercado.</p><div class="info-row"><span class="info-bullet green-bg"></span><div><strong>Entrada de productos</strong><small>Representa el ingreso de mercancía al inventario.</small></div></div><div class="info-row"><span class="info-bullet blue-bg"></span><div><strong>Salida de productos</strong><small>Representa el retiro de unidades disponibles.</small></div></div><div class="info-row"><span class="info-bullet amber-bg"></span><div><strong>Validación visual</strong><small>Permite revisar los datos antes de confirmar.</small></div></div></article>
+          </div>
+        </section>
+
+        <!-- ALERTAS -->
+        <section class="page-section" id="page-alertas">
+          <div class="page-heading"><div><p class="eyebrow">SEGUIMIENTO DE EXISTENCIAS</p><h1>Alertas de inventario</h1><p class="page-subtitle">Identifica los productos que requieren seguimiento o reposición.</p></div><span class="mini-counter large-counter"><i class="bi bi-bell"></i> 4 productos críticos</span></div>
+          <div class="alert-summary"><div class="alert-summary-card critical-summary clickable-stat" data-stock-filter="critico" role="button" tabindex="0" aria-label="Ver productos con stock crítico"><span class="stat-icon red"><i class="bi bi-exclamation-triangle"></i></span><div><strong>4</strong><small>Stock crítico</small></div></div><div class="alert-summary-card regular-summary clickable-stat" data-stock-filter="regular" role="button" tabindex="0" aria-label="Ver productos con stock regular"><span class="stat-icon amber"><i class="bi bi-exclamation-circle"></i></span><div><strong>3</strong><small>Stock regular</small></div></div><div class="alert-summary-card optimal-summary clickable-stat" data-stock-filter="optimo" role="button" tabindex="0" aria-label="Ver productos con stock óptimo"><span class="stat-icon green"><i class="bi bi-check-circle"></i></span><div><strong>11</strong><small>Stock óptimo</small></div></div></div>
+          <article class="panel"><div class="panel-heading"><div><h2>Productos que requieren atención</h2><p>Clasificación de acuerdo con el stock mínimo registrado</p></div></div>
+            <div class="alert-row"><span class="product-avatar red-soft"><i class="bi bi-basket"></i></span><div class="alert-product"><strong>Plátano maduro (kg)</strong><small>Código 017 · Existencias: 7 · Mínimo: 15</small></div><span class="badge badge-critical">Crítico</span><button class="row-action" data-demo="Ficha de Plátano maduro" data-product-code="017">Ver</button></div>
+            <div class="alert-row"><span class="product-avatar red-soft"><i class="bi bi-box"></i></span><div class="alert-product"><strong>Salchichón Zenú (500 g)</strong><small>Código 013 · Existencias: 9 · Mínimo: 10</small></div><span class="badge badge-critical">Crítico</span><button class="row-action" data-demo="Ficha de Salchichón Zenú" data-product-code="013">Ver</button></div>
+            <div class="alert-row"><span class="product-avatar red-soft"><i class="bi bi-circle"></i></span><div class="alert-product"><strong>Arepa de maíz blanco (x5)</strong><small>Código 005 · Existencias: 12 · Mínimo: 20</small></div><span class="badge badge-critical">Crítico</span><button class="row-action" data-demo="Ficha de Arepa de maíz blanco" data-product-code="005">Ver</button></div>
+            <div class="alert-row"><span class="product-avatar red-soft"><i class="bi bi-box-seam"></i></span><div class="alert-product"><strong>Azúcar Manuelita (1 kg)</strong><small>Código 011 · Existencias: 22 · Mínimo: 25</small></div><span class="badge badge-critical">Crítico</span><button class="row-action" data-demo="Ficha de Azúcar Manuelita" data-product-code="011">Ver</button></div>
+          </article>
+        </section>
+
+        <!-- REPORTES -->
+        <section class="page-section" id="page-reportes">
+          <div class="page-heading"><div><p class="eyebrow">ANÁLISIS DEL INVENTARIO</p><h1>Reportes</h1><p class="page-subtitle">Visualización gráfica del estado general de las existencias.</p></div><button class="btn btn-outline" id="printReport"><i class="bi bi-printer"></i> Imprimir vista</button></div>
+          <div class="stats-grid report-stats"><article class="stat-card"><div class="stat-top"><span>Productos registrados</span><span class="stat-icon blue"><i class="bi bi-box-seam"></i></span></div><div class="stat-value">18</div><div class="stat-foot">Total de referencias</div></article><article class="stat-card"><div class="stat-top"><span>Productos óptimos</span><span class="stat-icon green"><i class="bi bi-check-circle"></i></span></div><div class="stat-value">11</div><div class="stat-foot">61% del inventario</div></article><article class="stat-card"><div class="stat-top"><span>Productos por revisar</span><span class="stat-icon red"><i class="bi bi-exclamation-triangle"></i></span></div><div class="stat-value">7</div><div class="stat-foot">Regular y crítico</div></article></div>
+          <div class="reports-grid"><article class="panel"><div class="panel-heading"><div><h2>Distribución por estado</h2><p>Cantidad de productos en cada categoría</p></div></div><div class="bar-chart"><div class="bar-item"><div class="bar-value">11</div><div class="bar green-bar" style="height:150px"></div><span>Óptimo</span></div><div class="bar-item"><div class="bar-value">3</div><div class="bar amber-bar" style="height:52px"></div><span>Regular</span></div><div class="bar-item"><div class="bar-value">4</div><div class="bar red-bar" style="height:72px"></div><span>Crítico</span></div></div></article><article class="panel"><div class="panel-heading"><div><h2>Indicadores de control</h2><p>Resumen de niveles de inventario</p></div></div><div class="progress-metric"><div><span>Stock óptimo</span><strong>61%</strong></div><div class="progress-track"><span class="progress-green" style="width:61%"></span></div></div><div class="progress-metric"><div><span>Stock regular</span><strong>17%</strong></div><div class="progress-track"><span class="progress-amber" style="width:17%"></span></div></div><div class="progress-metric"><div><span>Stock crítico</span><strong>22%</strong></div><div class="progress-track"><span class="progress-red" style="width:22%"></span></div></div><div class="report-insight"><i class="bi bi-lightbulb"></i><span>Se recomienda revisar los productos clasificados en estado crítico.</span></div></article></div>
+        </section>
+
+        <!-- ACERCA -->
+        <section class="page-section" id="page-acerca">
+          <div class="page-heading"><div><p class="eyebrow">INFORMACIÓN GENERAL</p><h1>Acerca del sistema</h1><p class="page-subtitle">Conoce el propósito y los componentes del proyecto.</p></div></div>
+          <article class="about-hero panel"><div class="about-symbol"><i class="bi bi-box-seam"></i></div><div><span class="prototype-pill"><span></span> Proyecto académico</span><h2>Sistema de control de inventario</h2><p>Propuesta de aplicación web para apoyar el seguimiento de productos y existencias de un supermercado.</p></div></article>
+          <div class="about-grid"><article class="panel"><span class="stat-icon blue"><i class="bi bi-bullseye"></i></span><h2>Objetivo</h2><p>Facilitar la consulta y el control de las cantidades disponibles, identificando productos que necesitan reposición.</p></article><article class="panel"><span class="stat-icon green"><i class="bi bi-code-slash"></i></span><h2>Tecnologías del proyecto</h2><p>Python, Flask, HTML, CSS y JavaScript. El proyecto original incorpora el patrón de diseño Observer.</p></article><article class="panel"><span class="stat-icon violet"><i class="bi bi-diagram-3"></i></span><h2>Patrón Observer</h2><p>Permite notificar a observadores cuando cambia el inventario para clasificar el nivel de existencias y generar alertas.</p></article></div>
+        </section>
+
+        <footer class="page-footer"><span>InventarioPro · Prototipo académico</span><span>Diseño de interfaces y navegación</span></footer>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast-message" id="toastMessage" role="status" aria-live="polite"><i class="bi bi-info-circle"></i><span>Vista de demostración</span></div>
+  <div class="modal-backdrop" id="demoModal" aria-hidden="true"><div class="demo-modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><button class="modal-close" id="closeModal" aria-label="Cerrar"><i class="bi bi-x-lg"></i></button><span class="modal-symbol"><i class="bi bi-window"></i></span><h2 id="modalTitle">Vista de demostración</h2><p id="modalText">Esta acción forma parte de la navegación del prototipo.</p><button class="btn btn-primary" id="modalOk">Entendido</button></div></div>
+
+  <script src="js/navegacion.js"></script>
+</body>
+</html>
