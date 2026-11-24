@@ -1,129 +1,474 @@
-"""Mock-up del sistema de control de inventario de un supermercado."""
+"""Sistema de gestión y control de inventario.
 
-from copy import deepcopy
+Aplicación Flask con cinco módulos: resumen, productos, entradas y salidas,
+historial y alertas. Los datos se guardan en SQLite (ver `db.py`), así que
+todo lo que se registra en el navegador sigue ahí al reiniciar el servidor.
 
-from flask import Flask, flash, get_flashed_messages, redirect, render_template, request, url_for
+Las alertas de stock se resuelven con el patrón Observer (ver `observer.py`).
+"""
 
-from observer import ConsolaObserver, StockObserver, Subject
+import os
+from functools import wraps
+
+from flask import (
+    Flask,
+    flash,
+    redirect,
+    render_template,
+    request,
+    session,
+    url_for,
+)
+
+import db
+from observer import (
+    NIVEL_BAJO,
+    NIVEL_EXCESO,
+    ConsolaObserver,
+    StockObserver,
+    Subject,
+    clasificar,
+    describir,
+)
 
 app = Flask(__name__)
-# Clave fija: es un mock-up de demostración, no maneja datos reales.
-app.secret_key = "sistema-control-inventario-mockup"
+# Clave fija: es un proyecto académico de demostración, no maneja datos reales.
+app.secret_key = os.environ.get("SECRET_KEY", "sistema-control-inventario-itm")
 
-# Inventario base de una tienda de barrio en Medellín.
-INVENTARIO_INICIAL = [
-    {"id": "001", "nombre": "Arroz Diana (1 kg)", "cantidad": 150, "minimo": 50},
-    {"id": "002", "nombre": "Fríjol cargamanto (500 g)", "cantidad": 40, "minimo": 25},
-    {"id": "003", "nombre": "Panela redonda (500 g)", "cantidad": 28, "minimo": 20},
-    {"id": "004", "nombre": "Maíz trillado para mazamorra (500 g)", "cantidad": 18, "minimo": 15},
-    {"id": "005", "nombre": "Arepa de maíz blanco (x5)", "cantidad": 12, "minimo": 20},
-    {"id": "006", "nombre": "Chocolate Corona (500 g)", "cantidad": 60, "minimo": 20},
-    {"id": "007", "nombre": "Café Sello Rojo (250 g)", "cantidad": 35, "minimo": 20},
-    {"id": "008", "nombre": "Leche Colanta (1 L)", "cantidad": 90, "minimo": 40},
-    {"id": "009", "nombre": "Huevos AA (cubeta x30)", "cantidad": 14, "minimo": 10},
-    {"id": "010", "nombre": "Aceite Girasol (1 L)", "cantidad": 85, "minimo": 30},
-    {"id": "011", "nombre": "Azúcar Manuelita (1 kg)", "cantidad": 22, "minimo": 25},
-    {"id": "012", "nombre": "Pan tajado (500 g)", "cantidad": 16, "minimo": 12},
-    {"id": "013", "nombre": "Salchichón Zenú (500 g)", "cantidad": 9, "minimo": 10},
-    {"id": "014", "nombre": "Atún Van Camp's (160 g)", "cantidad": 70, "minimo": 30},
-    {"id": "015", "nombre": "Gaseosa Postobón Manzana (1.5 L)", "cantidad": 48, "minimo": 24},
-    {"id": "016", "nombre": "Agua Cristal (600 ml)", "cantidad": 120, "minimo": 50},
-    {"id": "017", "nombre": "Plátano maduro (kg)", "cantidad": 7, "minimo": 15},
-    {"id": "018", "nombre": "Papa criolla (kg)", "cantidad": 55, "minimo": 20},
+# --------------------------------------------------------------------------
+# Usuarios del sistema
+#
+# Credenciales fijas de demostración: no hay registro ni contraseñas reales,
+# y por eso tampoco se cifran. El rol decide qué puede hacer cada quien.
+# --------------------------------------------------------------------------
+USUARIOS = {
+    "laura": {
+        "clave": "1234",
+        "nombre": "Laura Gómez",
+        "rol": "encargado",
+        "cargo": "Encargada de inventario",
+    },
+    "admin": {
+        "clave": "1234",
+        "nombre": "Carlos Restrepo",
+        "rol": "administrador",
+        "cargo": "Administrador",
+    },
+}
+
+# Unidades y categorías que ofrece el formulario de productos.
+UNIDADES = ["Unidad", "Bolsa", "Botella", "Paquete", "Cubeta", "Kilo", "Litro", "Caja"]
+
+MOTIVOS_SALIDA = [
+    "Venta en mostrador",
+    "Pedido a domicilio",
+    "Producto vencido",
+    "Avería o daño",
+    "Devolución a proveedor",
+    "Consumo interno",
 ]
 
-# Estado en memoria. Al ser un mock-up no hay base de datos.
-productos = deepcopy(INVENTARIO_INICIAL)
-
-# Montaje del patrón Observer.
+# --------------------------------------------------------------------------
+# Montaje del patrón Observer
+# --------------------------------------------------------------------------
 inventario = Subject()
 observador_stock = StockObserver()
 inventario.attach(observador_stock)
 inventario.attach(ConsolaObserver())
 
 
-def revisar_inventario_completo():
-    """Notifica todos los productos para que tengan estado calculado."""
-    for producto in productos:
+# --------------------------------------------------------------------------
+# Sesión y permisos
+# --------------------------------------------------------------------------
+
+def requiere_sesion(vista):
+    """Manda al login a quien no haya iniciado sesión."""
+
+    @wraps(vista)
+    def envoltura(*args, **kwargs):
+        if "usuario" not in session:
+            return redirect(url_for("login", siguiente=request.path))
+        return vista(*args, **kwargs)
+
+    return envoltura
+
+
+def requiere_administrador(vista):
+    """Restringe la vista al rol de administrador."""
+
+    @wraps(vista)
+    def envoltura(*args, **kwargs):
+        if "usuario" not in session:
+            return redirect(url_for("login", siguiente=request.path))
+        if session.get("rol") != "administrador":
+            flash("Esa acción es solo para el administrador.", "danger")
+            return redirect(url_for("productos"))
+        return vista(*args, **kwargs)
+
+    return envoltura
+
+
+@app.context_processor
+def datos_comunes():
+    """Variables que todas las plantillas necesitan (barra superior y menú)."""
+    if "usuario" not in session:
+        return {}
+
+    productos = db.listar_productos(solo_activos=True)
+    alertas = [p for p in productos if clasificar(p) != "normal"]
+    return {
+        "total_alertas": len(alertas),
+        "usuario_nombre": session.get("nombre"),
+        "usuario_cargo": session.get("cargo"),
+        "usuario_rol": session.get("rol"),
+    }
+
+
+# --------------------------------------------------------------------------
+# Utilidades
+# --------------------------------------------------------------------------
+
+def leer_entero(campo, defecto=0):
+    """Lee un entero del formulario sin reventar si viene vacío o con texto."""
+    try:
+        return int(request.form.get(campo, defecto))
+    except (TypeError, ValueError):
+        return defecto
+
+
+def leer_decimal(campo, defecto=0.0):
+    """Lee un número con decimales del formulario."""
+    try:
+        return float(str(request.form.get(campo, defecto)).replace(",", "."))
+    except (TypeError, ValueError):
+        return defecto
+
+
+def avisar_alertas():
+    """Convierte en mensajes flash las alertas que levantó el observador."""
+    for alerta in observador_stock.recoger_alertas():
+        if alerta["tipo"] == NIVEL_BAJO:
+            flash(
+                f"{alerta['nombre']} quedó en {alerta['existencia']} "
+                f"(mínimo {alerta['minimo']}). Hay que reponer.",
+                "warning",
+            )
+        elif alerta["tipo"] == NIVEL_EXCESO:
+            flash(
+                f"{alerta['nombre']} llegó a {alerta['existencia']} "
+                f"(máximo {alerta['maximo']}). Hay sobre stock.",
+                "warning",
+            )
+
+
+def revisar_todo():
+    """Notifica cada producto activo para refrescar la memoria del observador."""
+    for producto in db.listar_productos(solo_activos=True):
         inventario.notify(producto)
 
 
-def buscar_producto(producto_id):
-    """Devuelve el producto con ese id, o None si no existe."""
-    for producto in productos:
-        if producto["id"] == producto_id:
-            return producto
-    return None
+# --------------------------------------------------------------------------
+# Autenticación
+# --------------------------------------------------------------------------
+
+@app.route("/login", methods=["GET", "POST"])
+def login():
+    if request.method == "POST":
+        usuario = request.form.get("usuario", "").strip().lower()
+        clave = request.form.get("clave", "")
+        datos = USUARIOS.get(usuario)
+
+        if datos is None or datos["clave"] != clave:
+            flash("Usuario o contraseña incorrectos.", "danger")
+            return render_template("login.html", usuario=usuario), 401
+
+        session["usuario"] = usuario
+        session["nombre"] = datos["nombre"]
+        session["rol"] = datos["rol"]
+        session["cargo"] = datos["cargo"]
+
+        # Al entrar se revisa el inventario para que el observador sepa en qué
+        # nivel está cada producto, pero sin anunciar alertas: no hubo un
+        # movimiento del usuario que las provoque.
+        observador_stock.olvidar()
+        revisar_todo()
+        observador_stock.recoger_alertas()
+
+        destino = request.args.get("siguiente") or url_for("resumen")
+        # Solo se acepta una ruta interna, nunca una URL de otro sitio.
+        if not destino.startswith("/"):
+            destino = url_for("resumen")
+        return redirect(destino)
+
+    if "usuario" in session:
+        return redirect(url_for("resumen"))
+    return render_template("login.html", usuario="")
 
 
-revisar_inventario_completo()
-# El arranque no es un movimiento del usuario: no se muestran esas alertas.
-observador_stock.recoger_alertas()
+@app.route("/logout", methods=["POST"])
+def logout():
+    session.clear()
+    flash("Sesión cerrada.", "info")
+    return redirect(url_for("login"))
 
+
+# --------------------------------------------------------------------------
+# Módulo 1: resumen general
+# --------------------------------------------------------------------------
 
 @app.route("/")
-def inicio():
-    return render_template("index.html", productos=productos)
+@requiere_sesion
+def resumen():
+    productos = [describir(p) for p in db.listar_productos(solo_activos=True)]
+
+    bajos = [p for p in productos if p["nivel"] == NIVEL_BAJO]
+    excesos = [p for p in productos if p["nivel"] == NIVEL_EXCESO]
+    valor = sum(p["existencia"] * p["precio"] for p in productos)
+
+    # Reparto por categoría, para la tabla de distribución.
+    categorias = {}
+    for producto in productos:
+        datos = categorias.setdefault(
+            producto["categoria"], {"productos": 0, "unidades": 0, "valor": 0}
+        )
+        datos["productos"] += 1
+        datos["unidades"] += producto["existencia"]
+        datos["valor"] += producto["existencia"] * producto["precio"]
+
+    categorias = sorted(
+        ({"nombre": k, **v} for k, v in categorias.items()),
+        key=lambda c: c["valor"],
+        reverse=True,
+    )
+
+    return render_template(
+        "resumen.html",
+        activo="resumen",
+        productos=productos,
+        bajos=bajos,
+        excesos=excesos,
+        valor_total=valor,
+        categorias=categorias,
+        hoy=db.contar_movimientos_de_hoy(),
+        ultimos=db.listar_movimientos(limite=8),
+    )
 
 
-@app.route("/movimiento", methods=["POST"])
-def registrar_movimiento():
-    """Registra una entrada o una salida y notifica al observador."""
-    producto = buscar_producto(request.form.get("producto_id", ""))
+# --------------------------------------------------------------------------
+# Módulo 2: productos
+# --------------------------------------------------------------------------
+
+@app.route("/productos")
+@requiere_sesion
+def productos():
+    busqueda = request.args.get("q", "").strip()
+    estado = request.args.get("estado", "activos")
+
+    lista = db.listar_productos(
+        solo_activos=(estado == "activos"), busqueda=busqueda
+    )
+    lista = [describir(p) for p in lista]
+
+    return render_template(
+        "productos.html",
+        activo="productos",
+        productos=lista,
+        busqueda=busqueda,
+        estado=estado,
+        unidades=UNIDADES,
+        codigo_sugerido=db.siguiente_codigo(),
+    )
+
+
+@app.route("/productos/nuevo", methods=["POST"])
+@requiere_administrador
+def producto_nuevo():
+    codigo = request.form.get("codigo", "").strip().upper()
+    nombre = request.form.get("nombre", "").strip()
+    categoria = request.form.get("categoria", "").strip()
+
+    if not codigo or not nombre or not categoria:
+        flash("Código, nombre y categoría son obligatorios.", "danger")
+        return redirect(url_for("productos"))
+
+    minimo = leer_entero("minimo")
+    maximo = leer_entero("maximo")
+    if maximo and maximo <= minimo:
+        flash("El nivel máximo debe ser mayor que el mínimo.", "danger")
+        return redirect(url_for("productos"))
+
+    ok, mensaje = db.crear_producto({
+        "codigo": codigo,
+        "nombre": nombre,
+        "categoria": categoria,
+        "unidad": request.form.get("unidad", "Unidad"),
+        "precio": leer_decimal("precio"),
+        "existencia": leer_entero("existencia"),
+        "minimo": minimo,
+        "maximo": maximo,
+    })
+
+    flash(mensaje, "success" if ok else "danger")
+    if ok:
+        inventario.notify(db.obtener_producto(codigo))
+        avisar_alertas()
+    return redirect(url_for("productos"))
+
+
+@app.route("/productos/<codigo>/editar", methods=["POST"])
+@requiere_administrador
+def producto_editar(codigo):
+    nombre = request.form.get("nombre", "").strip()
+    categoria = request.form.get("categoria", "").strip()
+
+    if not nombre or not categoria:
+        flash("Nombre y categoría son obligatorios.", "danger")
+        return redirect(url_for("productos"))
+
+    minimo = leer_entero("minimo")
+    maximo = leer_entero("maximo")
+    if maximo and maximo <= minimo:
+        flash("El nivel máximo debe ser mayor que el mínimo.", "danger")
+        return redirect(url_for("productos"))
+
+    ok, mensaje = db.actualizar_producto(codigo, {
+        "nombre": nombre,
+        "categoria": categoria,
+        "unidad": request.form.get("unidad", "Unidad"),
+        "precio": leer_decimal("precio"),
+        "minimo": minimo,
+        "maximo": maximo,
+    })
+
+    flash(mensaje, "success" if ok else "danger")
+    if ok:
+        # Cambiar los límites puede dejar el producto fuera de rango.
+        inventario.notify(db.obtener_producto(codigo))
+        avisar_alertas()
+    return redirect(url_for("productos"))
+
+
+@app.route("/productos/<codigo>/estado", methods=["POST"])
+@requiere_administrador
+def producto_estado(codigo):
+    ok, mensaje = db.alternar_estado(codigo)
+    flash(mensaje, "success" if ok else "danger")
+    return redirect(url_for("productos", q=request.form.get("q", ""),
+                            estado=request.form.get("estado", "activos")))
+
+
+# --------------------------------------------------------------------------
+# Módulo 3: entradas y salidas
+# --------------------------------------------------------------------------
+
+@app.route("/movimientos")
+@requiere_sesion
+def movimientos():
+    lista = [describir(p) for p in db.listar_productos(solo_activos=True)]
+    return render_template(
+        "movimientos.html",
+        activo="movimientos",
+        productos=lista,
+        motivos=MOTIVOS_SALIDA,
+        seleccionado=request.args.get("producto", ""),
+        ultimos=db.listar_movimientos(limite=10),
+    )
+
+
+@app.route("/movimientos", methods=["POST"])
+@requiere_sesion
+def movimiento_registrar():
+    codigo = request.form.get("producto", "")
     tipo = request.form.get("tipo", "")
-
-    try:
-        cantidad = int(request.form.get("cantidad", 0))
-    except ValueError:
-        cantidad = 0
-
-    if producto is None:
-        flash("El producto seleccionado no existe.", "error")
-        return redirect(url_for("inicio"))
-
-    if cantidad <= 0:
-        flash("La cantidad debe ser mayor que cero.", "error")
-        return redirect(url_for("inicio"))
+    cantidad = leer_entero("cantidad")
 
     if tipo == "entrada":
-        producto["cantidad"] += cantidad
-    elif tipo == "salida":
-        if cantidad > producto["cantidad"]:
-            flash(
-                f"Solo hay {producto['cantidad']} unidades de "
-                f"{producto['nombre']}.",
-                "error",
-            )
-            return redirect(url_for("inicio"))
-        producto["cantidad"] -= cantidad
+        proveedor = request.form.get("proveedor", "").strip()
+        if not proveedor:
+            flash("Indica el proveedor de la entrada.", "danger")
+            return redirect(url_for("movimientos", producto=codigo))
+        factura = request.form.get("factura", "").strip()
+        detalle = f"Proveedor: {proveedor}"
+        if factura:
+            detalle += f" · Factura {factura}"
     else:
-        flash("Tipo de movimiento no válido.", "error")
-        return redirect(url_for("inicio"))
+        motivo = request.form.get("motivo", "").strip()
+        detalle = f"Motivo: {motivo}" if motivo else "Motivo: no indicado"
 
+    ok, mensaje, producto = db.registrar_movimiento(
+        codigo, tipo, cantidad, detalle, session.get("nombre", "")
+    )
+
+    if not ok:
+        flash(mensaje, "danger")
+        return redirect(url_for("movimientos", producto=codigo))
+
+    flash(mensaje, "success")
     # El cambio se comunica al inventario, que avisa a sus observadores.
     inventario.notify(producto)
+    avisar_alertas()
+    return redirect(url_for("movimientos", producto=codigo))
 
-    flash(
-        f"Se registró una {tipo} de {cantidad} unidades de "
-        f"{producto['nombre']}.",
-        "exito",
+
+# --------------------------------------------------------------------------
+# Módulo 4: historial
+# --------------------------------------------------------------------------
+
+@app.route("/historial")
+@requiere_sesion
+def historial():
+    filtros = {
+        "tipo": request.args.get("tipo", ""),
+        "producto": request.args.get("producto", "").strip(),
+        "desde": request.args.get("desde", ""),
+        "hasta": request.args.get("hasta", ""),
+    }
+    lista = db.listar_movimientos(**filtros)
+
+    return render_template(
+        "historial.html",
+        activo="historial",
+        movimientos=lista,
+        filtros=filtros,
     )
-    for alerta in observador_stock.recoger_alertas():
-        flash(f"{alerta['nombre']}|{alerta['cantidad']}", "alerta")
 
-    return redirect(url_for("inicio"))
 
+# --------------------------------------------------------------------------
+# Módulo 5: niveles y alertas
+# --------------------------------------------------------------------------
+
+@app.route("/alertas")
+@requiere_sesion
+def alertas():
+    productos = [describir(p) for p in db.listar_productos(solo_activos=True)]
+
+    return render_template(
+        "alertas.html",
+        activo="alertas",
+        bajos=[p for p in productos if p["nivel"] == NIVEL_BAJO],
+        excesos=[p for p in productos if p["nivel"] == NIVEL_EXCESO],
+        normales=[p for p in productos if p["nivel"] == "normal"],
+    )
+
+
+# --------------------------------------------------------------------------
+# Reinicio de la demostración
+# --------------------------------------------------------------------------
 
 @app.route("/reiniciar", methods=["POST"])
-def reiniciar_inventario():
-    """Devuelve el inventario a su estado inicial."""
-    global productos
-    productos = deepcopy(INVENTARIO_INICIAL)
-    revisar_inventario_completo()
+@requiere_administrador
+def reiniciar():
+    db.inicializar(forzar=True)
+    observador_stock.olvidar()
+    revisar_todo()
     observador_stock.recoger_alertas()
-    get_flashed_messages()
-    flash("Inventario reiniciado.", "exito")
-    return redirect(url_for("inicio"))
+    flash("Los datos volvieron a su estado inicial.", "info")
+    return redirect(url_for("resumen"))
+
+
+# La base se prepara al importar el módulo, para que las pruebas y el
+# servidor encuentren siempre las tablas creadas.
+db.inicializar()
 
 
 if __name__ == "__main__":
