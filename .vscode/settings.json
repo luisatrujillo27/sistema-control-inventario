@@ -1,0 +1,24 @@
+{
+    // Intérprete del entorno virtual del proyecto.
+    "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "python.terminal.activateEnvironment": true,
+
+    // Pruebas con unittest desde la pestaña Testing.
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": false,
+    "python.testing.unittestArgs": [
+        "-v",
+        "-s",
+        ".",
+        "-p",
+        "test_*.py"
+    ],
+
+    // Live Server abre el prototipo estático en el puerto 5500.
+    "liveServer.settings.root": "/prototipo",
+    "liveServer.settings.port": 5500,
+
+    "files.exclude": {
+        "**/__pycache__": true
+    }
+}
