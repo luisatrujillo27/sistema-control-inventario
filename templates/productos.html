@@ -1,0 +1,263 @@
+{% extends "base.html" %}
+{% block titulo %}Productos{% endblock %}
+
+{% block contenido %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+    <div>
+        <h1 class="titulo-pagina">Productos</h1>
+        <p class="bajada">
+            {{ productos|length }} en el catálogo. La existencia solo cambia desde
+            <a href="{{ url_for('movimientos') }}">entradas y salidas</a>.
+        </p>
+    </div>
+
+    {% if usuario_rol == 'administrador' %}
+        <button class="btn btn-sm text-white" style="background-color: var(--acento);"
+                data-bs-toggle="modal" data-bs-target="#modalNuevo">
+            Nuevo producto
+        </button>
+    {% else %}
+        <span class="sub align-self-center">Solo lectura · el catálogo lo gestiona el administrador</span>
+    {% endif %}
+</div>
+
+<form class="row g-2 align-items-center mb-3" method="get" action="{{ url_for('productos') }}">
+    <div class="col-sm-6 col-lg-4">
+        <input class="form-control form-control-sm" name="q" value="{{ busqueda }}"
+               placeholder="Buscar por código, nombre o categoría" aria-label="Buscar">
+    </div>
+    <div class="col-auto">
+        <select class="form-select form-select-sm" name="estado" aria-label="Estado">
+            <option value="activos" {% if estado == 'activos' %}selected{% endif %}>Solo activos</option>
+            <option value="todos" {% if estado == 'todos' %}selected{% endif %}>Todos</option>
+        </select>
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-sm btn-outline-secondary" type="submit">Filtrar</button>
+    </div>
+    {% if busqueda or estado != 'activos' %}
+        <div class="col-auto">
+            <a class="btn btn-sm btn-link text-decoration-none" href="{{ url_for('productos') }}">Limpiar</a>
+        </div>
+    {% endif %}
+</form>
+
+<div class="tarjeta">
+    <div class="table-responsive">
+        <table class="table tabla">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th class="text-end">Existencia</th>
+                    <th>Nivel</th>
+                    <th class="text-end">Precio</th>
+                    <th class="text-end"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                    <tr {% if not producto.activo %}class="opacity-50"{% endif %}>
+                        <td>
+                            <span class="fw-semibold">{{ producto.nombre }}</span>
+                            <span class="sub d-block">
+                                {{ producto.codigo }} · {{ producto.categoria }}
+                                {% if not producto.activo %} · inactivo{% endif %}
+                            </span>
+                        </td>
+
+                        <td class="text-end">
+                            <span class="numero fw-semibold">{{ producto.existencia }}</span>
+                            <span class="sub">{{ producto.unidad|lower }}</span>
+                            {% set tope = producto.maximo or producto.existencia or 1 %}
+                            {% set ancho = [(producto.existencia / tope * 100), 100]|min %}
+                            <div class="nivel ms-auto">
+                                <span style="width: {{ ancho }}%;
+                                             background: var(--bs-{{ producto.color }});"></span>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="marca-estado {{ producto.nivel }}">{{ producto.estado }}</span>
+                            <span class="sub d-block">mín. {{ producto.minimo }} · máx. {{ producto.maximo }}</span>
+                        </td>
+
+                        <td class="text-end numero">
+                            ${{ '{:,.0f}'.format(producto.precio)|replace(',', '.') }}
+                        </td>
+
+                        <td class="text-end">
+                            {% if usuario_rol == 'administrador' %}
+                                <button class="btn btn-sm btn-outline-secondary"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#modalEditar{{ producto.codigo }}"
+                                        aria-label="Editar {{ producto.nombre }}">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <form method="post"
+                                      action="{{ url_for('producto_estado', codigo=producto.codigo) }}"
+                                      class="d-inline m-0">
+                                    <input type="hidden" name="q" value="{{ busqueda }}">
+                                    <input type="hidden" name="estado" value="{{ estado }}">
+                                    <button class="btn btn-sm btn-outline-secondary" type="submit"
+                                            aria-label="{{ 'Desactivar' if producto.activo else 'Activar' }} {{ producto.nombre }}">
+                                        <i class="bi bi-{{ 'slash-circle' if producto.activo else 'check-circle' }}"></i>
+                                    </button>
+                                </form>
+                            {% else %}
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   href="{{ url_for('movimientos', producto=producto.codigo) }}">Mover</a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="5" class="sub text-center py-5">
+                            No hay productos que coincidan con la búsqueda.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if usuario_rol == 'administrador' %}
+
+    {# ---- Modal: nuevo producto ---- #}
+    <div class="modal fade" id="modalNuevo" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <form class="modal-content" method="post" action="{{ url_for('producto_nuevo') }}">
+                <div class="modal-header">
+                    <h2 class="modal-title h6 mb-0">Nuevo producto</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold" for="nuevo-codigo">Código</label>
+                            <input class="form-control" id="nuevo-codigo" name="codigo"
+                                   value="{{ codigo_sugerido }}" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold" for="nuevo-unidad">Unidad</label>
+                            <select class="form-select" id="nuevo-unidad" name="unidad">
+                                {% for unidad in unidades %}<option>{{ unidad }}</option>{% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold" for="nuevo-nombre">Nombre</label>
+                            <input class="form-control" id="nuevo-nombre" name="nombre" required>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label small fw-semibold" for="nuevo-categoria">Categoría</label>
+                            <input class="form-control" id="nuevo-categoria" name="categoria"
+                                   list="lista-categorias" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold" for="nuevo-precio">Precio ($)</label>
+                            <input class="form-control" id="nuevo-precio" name="precio"
+                                   type="number" min="0" step="1" value="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold" for="nuevo-existencia">Existencia inicial</label>
+                            <input class="form-control" id="nuevo-existencia" name="existencia"
+                                   type="number" min="0" value="0">
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold" for="nuevo-minimo">Nivel mínimo</label>
+                            <input class="form-control" id="nuevo-minimo" name="minimo"
+                                   type="number" min="0" value="10" required>
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label small fw-semibold" for="nuevo-maximo">Nivel máximo</label>
+                            <input class="form-control" id="nuevo-maximo" name="maximo"
+                                   type="number" min="0" value="50" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-sm text-white"
+                            style="background-color: var(--acento);">Guardar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {# ---- Modales: editar cada producto ---- #}
+    {% for producto in productos %}
+        <div class="modal fade" id="modalEditar{{ producto.codigo }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <form class="modal-content" method="post"
+                      action="{{ url_for('producto_editar', codigo=producto.codigo) }}">
+                    <div class="modal-header">
+                        <h2 class="modal-title h6 mb-0">{{ producto.codigo }} · {{ producto.nombre }}</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold" for="ed-nombre-{{ producto.codigo }}">Nombre</label>
+                                <input class="form-control" id="ed-nombre-{{ producto.codigo }}"
+                                       name="nombre" value="{{ producto.nombre }}" required>
+                            </div>
+                            <div class="col-12">
+                                <label class="form-label small fw-semibold" for="ed-categoria-{{ producto.codigo }}">Categoría</label>
+                                <input class="form-control" id="ed-categoria-{{ producto.codigo }}"
+                                       name="categoria" value="{{ producto.categoria }}"
+                                       list="lista-categorias" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold" for="ed-unidad-{{ producto.codigo }}">Unidad</label>
+                                <select class="form-select" id="ed-unidad-{{ producto.codigo }}" name="unidad">
+                                    {% for unidad in unidades %}
+                                        <option {% if unidad == producto.unidad %}selected{% endif %}>{{ unidad }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold" for="ed-precio-{{ producto.codigo }}">Precio ($)</label>
+                                <input class="form-control" id="ed-precio-{{ producto.codigo }}"
+                                       name="precio" type="number" min="0" step="1"
+                                       value="{{ producto.precio|round|int }}">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold" for="ed-minimo-{{ producto.codigo }}">Nivel mínimo</label>
+                                <input class="form-control" id="ed-minimo-{{ producto.codigo }}"
+                                       name="minimo" type="number" min="0"
+                                       value="{{ producto.minimo }}" required>
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label small fw-semibold" for="ed-maximo-{{ producto.codigo }}">Nivel máximo</label>
+                                <input class="form-control" id="ed-maximo-{{ producto.codigo }}"
+                                       name="maximo" type="number" min="0"
+                                       value="{{ producto.maximo }}" required>
+                            </div>
+                            <div class="col-12">
+                                <p class="sub mb-0">
+                                    Existencia actual: <strong>{{ producto.existencia }}</strong>.
+                                    Solo cambia registrando entradas o salidas.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-sm text-white"
+                                style="background-color: var(--acento);">Guardar cambios</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    {% endfor %}
+
+    <datalist id="lista-categorias">
+        {% for categoria in productos|map(attribute='categoria')|unique|sort %}
+            <option value="{{ categoria }}"></option>
+        {% endfor %}
+    </datalist>
+
+{% endif %}
+
+{% endblock %}

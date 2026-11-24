@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block titulo %}Historial{% endblock %}
+
+{% block contenido %}
+
+<div class="mb-4">
+    <h1 class="titulo-pagina">Historial</h1>
+    <p class="bajada">{{ movimientos|length }} movimiento(s) registrado(s).</p>
+</div>
+
+<form class="row g-2 align-items-center mb-3" method="get" action="{{ url_for('historial') }}">
+    <div class="col-auto">
+        <select class="form-select form-select-sm" name="tipo" aria-label="Tipo de movimiento">
+            <option value="" {% if not filtros.tipo %}selected{% endif %}>Todos</option>
+            <option value="entrada" {% if filtros.tipo == 'entrada' %}selected{% endif %}>Entradas</option>
+            <option value="salida" {% if filtros.tipo == 'salida' %}selected{% endif %}>Salidas</option>
+        </select>
+    </div>
+    <div class="col-sm-4 col-lg-3">
+        <input class="form-control form-control-sm" name="producto" value="{{ filtros.producto }}"
+               placeholder="Código o nombre" aria-label="Producto">
+    </div>
+    <div class="col-auto">
+        <input class="form-control form-control-sm" name="desde" type="date"
+               value="{{ filtros.desde }}" aria-label="Desde">
+    </div>
+    <div class="col-auto">
+        <input class="form-control form-control-sm" name="hasta" type="date"
+               value="{{ filtros.hasta }}" aria-label="Hasta">
+    </div>
+    <div class="col-auto">
+        <button class="btn btn-sm btn-outline-secondary" type="submit">Filtrar</button>
+    </div>
+    {% if filtros.tipo or filtros.producto or filtros.desde or filtros.hasta %}
+        <div class="col-auto">
+            <a class="btn btn-sm btn-link text-decoration-none" href="{{ url_for('historial') }}">Limpiar</a>
+        </div>
+    {% endif %}
+</form>
+
+<div class="tarjeta">
+    <div class="table-responsive">
+        <table class="table tabla">
+            <thead>
+                <tr>
+                    <th>Movimiento</th>
+                    <th>Producto</th>
+                    <th>Detalle</th>
+                    <th class="text-end">Cant.</th>
+                    <th class="text-end">Queda</th>
+                    <th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for movimiento in movimientos %}
+                    <tr>
+                        <td>
+                            <span class="codigo">MOV-{{ '%04d'|format(movimiento.id) }}</span>
+                            <span class="sub d-block">{{ movimiento.fecha|replace('T', ' ') }}</span>
+                        </td>
+                        <td>
+                            <span class="fw-semibold">{{ movimiento.producto_nombre or '—' }}</span>
+                            <span class="sub d-block">{{ movimiento.producto }}</span>
+                        </td>
+                        <td class="sub">{{ movimiento.detalle }}</td>
+                        <td class="text-end numero fw-semibold
+                                   {{ 'text-success' if movimiento.tipo == 'entrada' else 'text-danger' }}">
+                            {{ '+' if movimiento.tipo == 'entrada' else '−' }}{{ movimiento.cantidad }}
+                        </td>
+                        <td class="text-end numero">{{ movimiento.resultante }}</td>
+                        <td class="sub">{{ movimiento.responsable }}</td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="6" class="sub text-center py-5">
+                            Ningún movimiento coincide con esos filtros.
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

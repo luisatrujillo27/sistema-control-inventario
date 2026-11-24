@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block titulo %}Alertas{% endblock %}
+
+{% macro listado(lista, vacio) %}
+    <div class="table-responsive">
+        <table class="table tabla">
+            <tbody>
+                {% for producto in lista %}
+                    <tr>
+                        <td>
+                            <span class="fw-semibold">{{ producto.nombre }}</span>
+                            <span class="sub d-block">{{ producto.codigo }} · {{ producto.categoria }}</span>
+                        </td>
+
+                        <td style="width: 150px;">
+                            <span class="numero fw-semibold">{{ producto.existencia }}</span>
+                            <span class="sub">{{ producto.unidad|lower }}</span>
+                            {% set tope = producto.maximo or producto.existencia or 1 %}
+                            {% set ancho = [(producto.existencia / tope * 100), 100]|min %}
+                            <div class="nivel">
+                                <span style="width: {{ ancho }}%;
+                                             background: var(--bs-{{ producto.color }});"></span>
+                            </div>
+                        </td>
+
+                        <td class="sub" style="width: 140px;">
+                            mín. {{ producto.minimo }} · máx. {{ producto.maximo }}
+                        </td>
+
+                        <td style="width: 1%;">
+                            <span class="marca-estado {{ producto.nivel }}">{{ producto.estado }}</span>
+                        </td>
+
+                        <td class="text-end" style="width: 1%;">
+                            <a class="btn btn-sm btn-outline-secondary"
+                               href="{{ url_for('movimientos', producto=producto.codigo) }}">
+                                {{ 'Reponer' if producto.nivel == 'bajo' else 'Mover' }}
+                            </a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td class="sub text-center py-4">{{ vacio }}</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endmacro %}
+
+{% block contenido %}
+
+<div class="mb-4">
+    <h1 class="titulo-pagina">Alertas</h1>
+    <p class="bajada">
+        El patrón Observer clasifica cada producto cuando cambia su existencia:
+        por debajo del mínimo es <strong>stock bajo</strong>, por encima del máximo
+        es <strong>sobre stock</strong>.
+    </p>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="dato peligro">
+            <p class="rotulo">Stock bajo</p>
+            <p class="cifra mb-0 text-danger">{{ bajos|length }}</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dato aviso">
+            <p class="rotulo">Sobre stock</p>
+            <p class="cifra mb-0 text-warning">{{ excesos|length }}</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="dato bien">
+            <p class="rotulo">En nivel normal</p>
+            <p class="cifra mb-0 text-success">{{ normales|length }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="tarjeta mb-3">
+    <div class="tarjeta-cabeza text-danger">Por debajo del mínimo</div>
+    {{ listado(bajos, 'Ningún producto está por debajo de su mínimo.') }}
+</div>
+
+<div class="tarjeta mb-3">
+    <div class="tarjeta-cabeza text-warning">Por encima del máximo</div>
+    {{ listado(excesos, 'Ningún producto supera su nivel máximo.') }}
+</div>
+
+<div class="tarjeta">
+    <div class="tarjeta-cabeza text-success">En nivel normal</div>
+    {{ listado(normales, 'No hay productos en nivel normal.') }}
+</div>
+
+{% endblock %}
