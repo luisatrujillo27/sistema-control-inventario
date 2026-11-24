@@ -1,0 +1,36 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Instalar dependencias",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe -m pip install -r requirements.txt",
+            "problemMatcher": []
+        },
+        {
+            "label": "Ejecutar servidor Flask",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe app.py",
+            "problemMatcher": [],
+            "isBackground": true
+        },
+        {
+            "label": "Servir prototipo (puerto 5500)",
+            "detail": "El prototipo necesita HTTP: como file:// no carga el CSS ni el JS.",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe -m http.server 5500 --bind 127.0.0.1",
+            "options": {
+                "cwd": "${workspaceFolder}/prototipo"
+            },
+            "problemMatcher": [],
+            "isBackground": true
+        },
+        {
+            "label": "Ejecutar pruebas",
+            "type": "shell",
+            "command": "${workspaceFolder}/.venv/Scripts/python.exe -m unittest discover -v",
+            "group": "test",
+            "problemMatcher": []
+        }
+    ]
+}

@@ -9,7 +9,11 @@ __pycache__/
 *.egg-info/
 
 # Editores
-.vscode/
+.vscode/*
+!.vscode/launch.json
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/extensions.json
 .idea/
 *.swp
 
@@ -17,3 +21,6 @@ __pycache__/
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Base de datos local (se regenera sola)
+inventario.db

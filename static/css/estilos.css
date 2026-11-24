@@ -1,0 +1,339 @@
+/* Estilos del sistema de control de inventario.
+   Tema claro sobre Bootstrap, con un menú lateral de iconos que se
+   despliega al pasar el ratón. */
+
+:root {
+    --acento: #4338ca;
+    --acento-suave: #eef2ff;
+    --fondo: #f6f7f9;
+    --borde: #e4e6eb;
+    --lateral: 68px;
+    --lateral-abierto: 228px;
+    --alto-cabecera: 60px;
+}
+
+body {
+    background-color: var(--fondo);
+    min-height: 100vh;
+}
+
+/* --- Cabecera ------------------------------------------------------- */
+
+.cabecera {
+    height: var(--alto-cabecera);
+    background: #fff;
+    border-bottom: 1px solid var(--borde);
+    position: sticky;
+    top: 0;
+    z-index: 1030;
+}
+
+.marca {
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    color: #111827;
+    text-decoration: none;
+}
+
+.marca .bi {
+    color: var(--acento);
+}
+
+/* --- Menú lateral de iconos ----------------------------------------- */
+
+/* Va fuera del flujo flex a propósito: dentro de un contenedor flex el
+   `flex-basis` gana sobre el `width`, y el desplegado no llegaría a abrirse.
+   Flotando sobre el contenido, además, la página no se mueve al abrirlo. */
+.lateral {
+    width: var(--lateral);
+    background: #fff;
+    border-right: 1px solid var(--borde);
+    position: fixed;
+    top: var(--alto-cabecera);
+    left: 0;
+    bottom: 0;
+    z-index: 1020;
+    padding: 0.75rem 0.5rem;
+    transition: width 0.18s ease;
+    overflow: hidden;
+}
+
+/* Al pasar el ratón (o al enfocar con el teclado) se despliega por encima
+   del contenido, sin empujarlo: así la página no se mueve. */
+.lateral:hover,
+.lateral:focus-within {
+    width: var(--lateral-abierto);
+    box-shadow: 4px 0 16px rgba(17, 24, 39, 0.08);
+}
+
+.modulo {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    height: 44px;
+    padding: 0 0.75rem;
+    margin-bottom: 0.25rem;
+    border-radius: 10px;
+    color: #4b5563;
+    text-decoration: none;
+    white-space: nowrap;
+}
+
+.modulo .bi {
+    font-size: 1.15rem;
+    flex: 0 0 1.25rem;
+    text-align: center;
+}
+
+.modulo .texto {
+    opacity: 0;
+    transition: opacity 0.18s ease;
+    font-size: 0.925rem;
+}
+
+.lateral:hover .modulo .texto,
+.lateral:focus-within .modulo .texto {
+    opacity: 1;
+}
+
+.modulo:hover {
+    background: #f3f4f6;
+    color: #111827;
+}
+
+.modulo.activo {
+    background: var(--acento-suave);
+    color: var(--acento);
+    font-weight: 600;
+}
+
+/* Punto rojo sobre el icono de alertas cuando hay productos fuera de rango. */
+.modulo .punto {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--bs-danger);
+    margin-left: auto;
+    flex: 0 0 7px;
+}
+
+/* En móvil el lateral pasa a ser una fila de iconos bajo la cabecera. */
+@media (max-width: 767.98px) {
+    .armazon {
+        flex-direction: column;
+    }
+
+    .lateral {
+        width: 100%;
+        height: auto;
+        position: static;
+        display: flex;
+        gap: 0.25rem;
+        overflow-x: auto;
+        border-right: 0;
+        border-bottom: 1px solid var(--borde);
+    }
+
+    .contenido {
+        margin-left: 0;
+    }
+
+    .lateral:hover,
+    .lateral:focus-within {
+        width: 100%;
+        box-shadow: none;
+    }
+
+    .modulo {
+        flex-direction: column;
+        gap: 0.15rem;
+        height: auto;
+        padding: 0.5rem 0.6rem;
+        font-size: 0.7rem;
+    }
+
+    .modulo .texto {
+        opacity: 1;
+        font-size: 0.68rem;
+    }
+
+    .modulo .punto {
+        display: none;
+    }
+}
+
+/* --- Contenido ------------------------------------------------------ */
+
+.contenido {
+    min-width: 0;
+    padding: 1.75rem;
+    /* Hueco del menú lateral, que está fijo. */
+    margin-left: var(--lateral);
+}
+
+.titulo-pagina {
+    font-size: 1.4rem;
+    font-weight: 650;
+    letter-spacing: -0.02em;
+    color: #111827;
+    margin-bottom: 0.15rem;
+}
+
+.bajada {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin-bottom: 0;
+}
+
+/* --- Tarjetas ------------------------------------------------------- */
+
+.tarjeta {
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+}
+
+.tarjeta-cabeza {
+    padding: 0.85rem 1.15rem;
+    border-bottom: 1px solid var(--borde);
+    font-weight: 600;
+    font-size: 0.925rem;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.tarjeta-cuerpo {
+    padding: 1.15rem;
+}
+
+/* --- Indicadores ---------------------------------------------------- */
+
+.dato {
+    background: #fff;
+    border: 1px solid var(--borde);
+    border-radius: 12px;
+    padding: 1.1rem 1.15rem;
+    height: 100%;
+}
+
+.dato .rotulo {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    margin-bottom: 0.35rem;
+}
+
+.dato .cifra {
+    font-size: 1.65rem;
+    font-weight: 650;
+    line-height: 1.1;
+    color: #111827;
+    white-space: nowrap;
+}
+
+.dato.peligro { border-left: 3px solid var(--bs-danger); }
+.dato.aviso   { border-left: 3px solid var(--bs-warning); }
+.dato.bien    { border-left: 3px solid var(--bs-success); }
+
+@media (max-width: 575.98px) {
+    .dato .cifra { font-size: 1.3rem; }
+    .contenido { padding: 1rem; }
+}
+
+/* --- Tablas --------------------------------------------------------- */
+
+.tabla {
+    margin-bottom: 0;
+}
+
+.tabla thead th {
+    background: #fafbfc;
+    border-bottom: 1px solid var(--borde);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: #6b7280;
+    font-weight: 600;
+    white-space: nowrap;
+    padding: 0.6rem 0.9rem;
+}
+
+.tabla tbody td {
+    padding: 0.7rem 0.9rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f2f4;
+}
+
+.tabla tbody tr:last-child td {
+    border-bottom: 0;
+}
+
+.tabla tbody tr:hover {
+    background: #fafbfc;
+}
+
+.numero {
+    font-variant-numeric: tabular-nums;
+}
+
+.codigo {
+    font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+    font-size: 0.82rem;
+    color: #6b7280;
+    white-space: nowrap;
+}
+
+.sub {
+    font-size: 0.78rem;
+    color: #9ca3af;
+}
+
+/* Barra de nivel: dónde está la existencia entre el mínimo y el máximo. */
+.nivel {
+    height: 4px;
+    width: 86px;
+    background: #eceef1;
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 0.3rem;
+}
+
+.nivel span {
+    display: block;
+    height: 100%;
+    border-radius: 2px;
+}
+
+/* --- Etiquetas de estado -------------------------------------------- */
+
+.marca-estado {
+    font-size: 0.72rem;
+    font-weight: 600;
+    padding: 0.2rem 0.55rem;
+    border-radius: 20px;
+    white-space: nowrap;
+}
+
+.marca-estado.bajo   { background: #fee2e2; color: #b91c1c; }
+.marca-estado.normal { background: #dcfce7; color: #15803d; }
+.marca-estado.exceso { background: #fef3c7; color: #b45309; }
+
+/* --- Pantalla de acceso --------------------------------------------- */
+
+.acceso {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem;
+    background: var(--fondo);
+}
+
+.acceso-caja {
+    width: 100%;
+    max-width: 380px;
+}

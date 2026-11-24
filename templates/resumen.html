@@ -1,0 +1,175 @@
+{% extends "base.html" %}
+{% block titulo %}Resumen{% endblock %}
+
+{% block contenido %}
+
+<div class="d-flex flex-wrap justify-content-between align-items-start gap-2 mb-4">
+    <div>
+        <h1 class="titulo-pagina">Resumen</h1>
+        <p class="bajada">Estado del inventario al día de hoy.</p>
+    </div>
+
+    <div class="d-flex gap-2">
+        <a class="btn btn-sm text-white" style="background-color: var(--acento);"
+           href="{{ url_for('movimientos') }}">
+            Registrar movimiento
+        </a>
+        {% if usuario_rol == 'administrador' %}
+            <form method="post" action="{{ url_for('reiniciar') }}"
+                  onsubmit="return confirm('Esto borra los movimientos registrados y devuelve el catálogo a su estado inicial. ¿Continuar?');">
+                <button class="btn btn-sm btn-outline-secondary" type="submit">Reiniciar datos</button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-6 col-xl-3">
+        <div class="dato">
+            <p class="rotulo">Productos activos</p>
+            <p class="cifra mb-0">{{ productos|length }}</p>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="dato peligro">
+            <p class="rotulo">Bajo mínimo</p>
+            <p class="cifra mb-0 text-danger">{{ bajos|length }}</p>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="dato aviso">
+            <p class="rotulo">Sobre máximo</p>
+            <p class="cifra mb-0 text-warning">{{ excesos|length }}</p>
+        </div>
+    </div>
+    <div class="col-6 col-xl-3">
+        <div class="dato">
+            <p class="rotulo">Valor del inventario</p>
+            <p class="cifra mb-0 numero">${{ '{:,.0f}'.format(valor_total)|replace(',', '.') }}</p>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-4">
+        <div class="tarjeta h-100">
+            <div class="tarjeta-cabeza">Movimientos de hoy</div>
+            <div class="tarjeta-cuerpo d-flex gap-4">
+                <div>
+                    <p class="rotulo">Entradas</p>
+                    <p class="cifra mb-0 text-success">{{ hoy.entradas }}</p>
+                </div>
+                <div>
+                    <p class="rotulo">Salidas</p>
+                    <p class="cifra mb-0" style="color: var(--acento);">{{ hoy.salidas }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="tarjeta h-100">
+            <div class="tarjeta-cabeza">
+                <span>Requieren atención</span>
+                <a class="small text-decoration-none" href="{{ url_for('alertas') }}">Ver todo</a>
+            </div>
+            <table class="table tabla">
+                <tbody>
+                    {% for producto in (bajos + excesos)[:4] %}
+                        <tr>
+                            <td>
+                                <span class="fw-semibold">{{ producto.nombre }}</span>
+                                <span class="codigo ms-2">{{ producto.codigo }}</span>
+                            </td>
+                            <td class="text-end numero">
+                                {{ producto.existencia }} / mín. {{ producto.minimo }}
+                            </td>
+                            <td class="text-end" style="width: 1%;">
+                                <span class="marca-estado {{ producto.nivel }}">{{ producto.estado }}</span>
+                            </td>
+                            <td class="text-end" style="width: 1%;">
+                                <a class="btn btn-sm btn-outline-secondary"
+                                   href="{{ url_for('movimientos', producto=producto.codigo) }}">Reponer</a>
+                            </td>
+                        </tr>
+                    {% else %}
+                        <tr><td class="sub py-4 text-center">Todo el inventario está dentro de sus niveles.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-5">
+        <div class="tarjeta h-100">
+            <div class="tarjeta-cabeza">Por categoría</div>
+            <div class="table-responsive">
+                <table class="table tabla">
+                    <thead>
+                        <tr>
+                            <th>Categoría</th>
+                            <th class="text-end">Prod.</th>
+                            <th class="text-end">Unid.</th>
+                            <th class="text-end">Valor</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for categoria in categorias %}
+                            <tr>
+                                <td>{{ categoria.nombre }}</td>
+                                <td class="text-end numero">{{ categoria.productos }}</td>
+                                <td class="text-end numero">{{ categoria.unidades }}</td>
+                                <td class="text-end numero">
+                                    ${{ '{:,.0f}'.format(categoria.valor)|replace(',', '.') }}
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="tarjeta h-100">
+            <div class="tarjeta-cabeza">
+                <span>Últimos movimientos</span>
+                <a class="small text-decoration-none" href="{{ url_for('historial') }}">Ver historial</a>
+            </div>
+            <div class="table-responsive">
+                <table class="table tabla">
+                    <thead>
+                        <tr>
+                            <th>Producto</th>
+                            <th>Cuándo</th>
+                            <th class="text-end">Cant.</th>
+                            <th class="text-end">Queda</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movimiento in ultimos %}
+                            <tr>
+                                <td>
+                                    {{ movimiento.producto_nombre or movimiento.producto }}
+                                    <span class="sub d-block">{{ movimiento.detalle }}</span>
+                                </td>
+                                <td class="sub">{{ movimiento.fecha[11:16] }}</td>
+                                <td class="text-end numero fw-semibold
+                                           {{ 'text-success' if movimiento.tipo == 'entrada' else 'text-danger' }}">
+                                    {{ '+' if movimiento.tipo == 'entrada' else '−' }}{{ movimiento.cantidad }}
+                                </td>
+                                <td class="text-end numero">{{ movimiento.resultante }}</td>
+                            </tr>
+                        {% else %}
+                            <tr><td colspan="4" class="sub py-4 text-center">Todavía no hay movimientos.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

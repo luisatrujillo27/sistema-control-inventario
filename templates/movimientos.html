@@ -1,0 +1,146 @@
+{% extends "base.html" %}
+{% block titulo %}Entradas y salidas{% endblock %}
+
+{% block contenido %}
+
+<div class="mb-4">
+    <h1 class="titulo-pagina">Entradas y salidas</h1>
+    <p class="bajada">Cada movimiento ajusta la existencia y queda asentado en el historial.</p>
+</div>
+
+<div class="row g-3 mb-4">
+
+    <div class="col-lg-6">
+        <div class="tarjeta h-100">
+            <div class="tarjeta-cabeza">
+                <span><i class="bi bi-arrow-down-circle text-success"></i> Entrada de mercancía</span>
+            </div>
+            <div class="tarjeta-cuerpo">
+                <form method="post" action="{{ url_for('movimiento_registrar') }}">
+                    <input type="hidden" name="tipo" value="entrada">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="entrada-producto">Producto</label>
+                        <select class="form-select" id="entrada-producto" name="producto" required>
+                            {% for producto in productos %}
+                                <option value="{{ producto.codigo }}"
+                                        {% if producto.codigo == seleccionado %}selected{% endif %}>
+                                    {{ producto.nombre }} — hay {{ producto.existencia }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-5">
+                            <label class="form-label small fw-semibold" for="entrada-cantidad">Cantidad</label>
+                            <input class="form-control" id="entrada-cantidad" name="cantidad"
+                                   type="number" min="1" required placeholder="20">
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label small fw-semibold" for="entrada-factura">
+                                Factura <span class="sub">(opcional)</span>
+                            </label>
+                            <input class="form-control" id="entrada-factura" name="factura" placeholder="F-10234">
+                        </div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label small fw-semibold" for="entrada-proveedor">Proveedor</label>
+                        <input class="form-control" id="entrada-proveedor" name="proveedor"
+                               required placeholder="Distribuidora del Valle">
+                    </div>
+
+                    <button class="btn btn-success w-100" type="submit">Confirmar entrada</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="tarjeta h-100">
+            <div class="tarjeta-cabeza">
+                <span><i class="bi bi-arrow-up-circle text-danger"></i> Salida de mercancía</span>
+            </div>
+            <div class="tarjeta-cuerpo">
+                <form method="post" action="{{ url_for('movimiento_registrar') }}">
+                    <input type="hidden" name="tipo" value="salida">
+
+                    <div class="mb-3">
+                        <label class="form-label small fw-semibold" for="salida-producto">Producto</label>
+                        <select class="form-select" id="salida-producto" name="producto" required>
+                            {% for producto in productos %}
+                                <option value="{{ producto.codigo }}"
+                                        {% if producto.codigo == seleccionado %}selected{% endif %}>
+                                    {{ producto.nombre }} — hay {{ producto.existencia }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-5">
+                            <label class="form-label small fw-semibold" for="salida-cantidad">Cantidad</label>
+                            <input class="form-control" id="salida-cantidad" name="cantidad"
+                                   type="number" min="1" required placeholder="5">
+                        </div>
+                        <div class="col-7">
+                            <label class="form-label small fw-semibold" for="salida-motivo">Motivo</label>
+                            <select class="form-select" id="salida-motivo" name="motivo">
+                                {% for motivo in motivos %}<option>{{ motivo }}</option>{% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <p class="sub mb-4">
+                        No se permite sacar más de lo disponible. Si la existencia queda en el
+                        mínimo o por debajo, el sistema levanta una alerta.
+                    </p>
+
+                    <button class="btn btn-danger w-100" type="submit">Confirmar salida</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="tarjeta">
+    <div class="tarjeta-cabeza">
+        <span>Movimientos recientes</span>
+        <a class="small text-decoration-none" href="{{ url_for('historial') }}">Ver historial completo</a>
+    </div>
+    <div class="table-responsive">
+        <table class="table tabla">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Detalle</th>
+                    <th class="text-end">Cant.</th>
+                    <th class="text-end">Queda</th>
+                    <th>Responsable</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for movimiento in ultimos %}
+                    <tr>
+                        <td>
+                            <span class="fw-semibold">{{ movimiento.producto_nombre or movimiento.producto }}</span>
+                            <span class="sub d-block">{{ movimiento.fecha|replace('T', ' ') }}</span>
+                        </td>
+                        <td class="sub">{{ movimiento.detalle }}</td>
+                        <td class="text-end numero fw-semibold
+                                   {{ 'text-success' if movimiento.tipo == 'entrada' else 'text-danger' }}">
+                            {{ '+' if movimiento.tipo == 'entrada' else '−' }}{{ movimiento.cantidad }}
+                        </td>
+                        <td class="text-end numero">{{ movimiento.resultante }}</td>
+                        <td class="sub">{{ movimiento.responsable }}</td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="5" class="sub text-center py-5">Todavía no hay movimientos.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}
